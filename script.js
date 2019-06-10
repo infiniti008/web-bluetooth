@@ -87,7 +87,7 @@ function test(){
         var minuts = new DataView(val.buffer.slice(5, 6), 0).getInt8(0)
         var seconds = new DataView(val.buffer.slice(6, 7), 0).getInt8(0)
 
-        console.log(`${hours}:${minuts}:${seconds}`);
+//         console.log(`${hours}:${minuts}:${seconds}`);
 
         writeTime(hours, minuts, seconds)
       })
