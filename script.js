@@ -1,4 +1,10 @@
 var myDevice;
+var autoReconnect = false;
+
+document.getElementById('autoReconnect').addEventListener('click', (event) => {
+    console.log(event.target.checked)
+    autoReconnect = event.target.checked;
+})
 
 var intervalId;
 
@@ -35,37 +41,38 @@ for (const service in servicesList) {
 console.log(optionalServices)
 
 function test(){
-  navigator.bluetooth.requestDevice({
-    filters: [{
-      name : "Mi Band 3"
-    }],       // you can't use filters and acceptAllDevices together
-    optionalServices: optionalServices
+    navigator.bluetooth.requestDevice({
+        filters: [{
+            name : "Mi Band 3"
+        }],
+        optionalServices: optionalServices
+    })
+    .then(function(device) {
+        myDevice = device;
+        console.log(device);
+        device.addEventListener('gattserverdisconnected', onDisconnected);
+
+        device.gatt.connect()
+            .then(startServer)
+            .catch(err => {
+                console.log('Faild to connetc GATT')
+                console.log(err)
+        })
   })
-  .then(function(device) {
-    // save the device returned so you can disconnect later:
-    myDevice = device;
-    console.log(device);
-    device.addEventListener('gattserverdisconnected', onDisconnected);
-    // connect to the device once you find it:
-    return device.gatt.connect();
-  })
-  .then(function(server) {
+}
+
+
+
+  function startServer(server) {
     console.log(1);
     // get the primary service:
-    return server.getPrimaryService(servicesList.unknown.id);
-  })
-  .then(function(service) {
-    console.log(2);
-    // get the  characteristic:
-    return service.getCharacteristic(servicesList.unknown.currTime);
-  })
-  // .then(function(characteristics) {
-  //   // subscribe to the characteristic:
-  //   for (c in characteristics) {
-  //     characteristics[c].startNotifications()
-  //     .then(subscribeToChanges);
-  //   }
-  // })
+    server.getPrimaryService(servicesList.unknown.id)
+      .then(function(service) {
+        console.log(2);
+        // get the  characteristic:
+        return service.getCharacteristic(servicesList.unknown.currTime);
+      })
+
 
   .then(characteristics => {
     console.log(3)
@@ -92,10 +99,29 @@ function test(){
   });
 }
 
+
+function reconnect(){
+    myDevice.gatt.connect()
+        .then(startServer)
+        .catch(err => {
+            console.log('Faild to connetc GATT')
+            console.log(err)
+        })
+}
+
 function onDisconnected(event) {
-  let device = event.target;
-  console.log('Device ' + device.name + ' is disconnected.');
-  clearInterval(intervalId)
+    let device = event.target;
+    console.log('Device ' + device.name + ' is disconnected.');
+    clearInterval(intervalId);
+
+    if(autoReconnect){
+        device.gatt.connect()
+            .then(startServer)
+            .catch(err => {
+                console.log('Faild to connetc GATT')
+                console.log(err)
+            })
+    }
 }
 
 function writeTime (h, m, s){
