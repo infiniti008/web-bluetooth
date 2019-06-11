@@ -61,6 +61,10 @@ function test(){
   })
 }
 
+function gattDisconnect(){
+    myDevice.gatt.disconnect();
+}
+
 
 
   function startServer(server) {
@@ -130,11 +134,10 @@ function writeTime (h, m, s){
   document.getElementById('ss').innerHTML = s;
 }
 
-
-
+// Registration SW
 if ('serviceWorker' in navigator) {
     // Use the window load event to keep the page load performant
     window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js');
+        navigator.serviceWorker.register('/sw.js');
     });
 }
